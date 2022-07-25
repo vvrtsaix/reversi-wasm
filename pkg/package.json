@@ -1,0 +1,19 @@
+{
+  "name": "reversi-wasm",
+  "description": "Reversi (Othello) game.",
+  "version": "0.1.0",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/vvrtsaix/reversi-wasm"
+  },
+  "files": [
+    "reversi_wasm_bg.wasm",
+    "reversi_wasm.js",
+    "reversi_wasm.d.ts",
+    "LICENSE.txt"
+  ],
+  "module": "reversi_wasm.js",
+  "types": "reversi_wasm.d.ts",
+  "sideEffects": false
+}
