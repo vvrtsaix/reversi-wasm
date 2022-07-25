@@ -93,8 +93,8 @@ impl Reversi {
     pub fn get_scores(&self) -> Score {
         self.disks.iter().fold(Score(0, 0), |mut acc, (_, side)| {
             match side {
-                Side::Dark => acc.0 += 1,
-                Side::White => acc.1 += 1,
+                Side::White => acc.0 += 1,
+                Side::Dark => acc.1 += 1,
             }
             acc
         })
