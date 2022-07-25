@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <title>Reversi</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600;1,700&display=swap"
+    rel="stylesheet">
+  <style>
+    html {
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    #root {
+      text-align: center;
+    }
+
+    table,
+    th,
+    td {
+      border: 1px solid black;
+      border-collapse: collapse;
+    }
+
+    table {
+      margin: 0 auto;
+    }
+
+    td {
+      width: 3rem;
+      height: 3rem;
+      cursor: pointer;
+      font-size: 2rem;
+      overflow: hidden;
+      margin: 0;
+      padding: 0;
+    }
+
+    td:hover {
+      background: lightgrey;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="root"></div>
+
+  <script type="module">
+    import "https://unpkg.com/react@18/umd/react.production.min.js";
+    import "https://unpkg.com/react-dom@18/umd/react-dom.production.min.js";
+    import init, { App, WasmReact } from "./pkg/reversi_wasm.js";
+
+    await init();
+    WasmReact.useReact(window.React);
+
+    const root = ReactDOM.createRoot(document.getElementById("root"));
+    root.render(
+      React.createElement(App, { size: 8 })
+    );
+  </script>
+</body>
+
+</html>

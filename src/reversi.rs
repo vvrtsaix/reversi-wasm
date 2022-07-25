@@ -1,36 +1,11 @@
-use std::{collections::HashMap, fmt::Display, ops::Add};
+pub mod position;
+pub mod score;
+pub mod side;
+use std::collections::HashMap;
 
-#[derive(Debug, Hash, PartialEq, Eq, Clone, Copy)]
-pub struct Position(pub isize, pub isize);
-
-impl Add for Position {
-    type Output = Position;
-    fn add(self, rhs: Self) -> Self::Output {
-        Position(self.0 + rhs.0, self.1 + rhs.1)
-    }
-}
-
-impl Display for Position {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "[{}, {}]", self.0, self.1)?;
-        Ok(())
-    }
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum Side {
-    Dark,
-    White,
-}
-
-impl Side {
-    pub fn rev(&self) -> Self {
-        match self {
-            Side::White => Side::Dark,
-            Side::Dark => Side::White,
-        }
-    }
-}
+use position::Position;
+use score::Score;
+use side::Side;
 
 static DIRECTIONS: [Position; 8] = [
     Position(-1, -1), // Northwest
@@ -43,12 +18,12 @@ static DIRECTIONS: [Position; 8] = [
     Position(0, -1),  // West
 ];
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct Reversi {
-    width: isize,
-    height: isize,
-    active_side: Side,
-    disks: HashMap<Position, Side>,
+    pub width: isize,
+    pub height: isize,
+    pub active_side: Side,
+    pub disks: HashMap<Position, Side>,
 }
 
 impl Reversi {
@@ -70,11 +45,64 @@ impl Reversi {
         r > 0 && r <= self.height && c > 0 && c <= self.width
     }
 
-    pub fn place(&mut self, pos: Position) -> Result<(), String> {
+    fn is_valid_place(&self, pos: Position) -> bool {
         if !self.in_board(pos) || self.disks.contains_key(&pos) {
-            return Err(String::from(
-                "Position isn't in board or another disk already placed.",
-            ));
+            return false;
+        }
+
+        let other_side = self.active_side.rev();
+
+        for dir in DIRECTIONS {
+            let mut _current_pos = pos + dir;
+            if self.in_board(_current_pos) && self.disks.get(&_current_pos) == Some(&other_side) {
+                _current_pos = _current_pos + dir;
+                if !self.in_board(_current_pos) {
+                    continue;
+                }
+                while self.disks.get(&_current_pos) == Some(&other_side) {
+                    _current_pos = _current_pos + dir;
+                    if !self.in_board(_current_pos) {
+                        break;
+                    }
+                }
+                if !self.in_board(_current_pos) {
+                    continue;
+                }
+                if self.disks.get(&_current_pos) == Some(&self.active_side) {
+                    return true;
+                }
+            }
+        }
+
+        false
+    }
+
+    pub fn possible_places(&self) -> Vec<Position> {
+        let mut moves = vec![];
+        for row in 1..=self.height {
+            for col in 1..=self.width {
+                let pos = Position(row, col);
+                if self.is_valid_place(pos) {
+                    moves.push(pos);
+                }
+            }
+        }
+        moves
+    }
+
+    pub fn get_scores(&self) -> Score {
+        self.disks.iter().fold(Score(0, 0), |mut acc, (_, side)| {
+            match side {
+                Side::Dark => acc.0 += 1,
+                Side::White => acc.1 += 1,
+            }
+            acc
+        })
+    }
+
+    pub fn place(&mut self, pos: Position) -> Result<(), &'static str> {
+        if !self.in_board(pos) || self.disks.contains_key(&pos) {
+            return Err("Position isn't in board or another disk already placed.");
         }
 
         let other_side = self.active_side.rev();
@@ -107,14 +135,39 @@ impl Reversi {
         }
 
         if flips.len() == 1 {
-            let pos_str = pos.to_string();
-            return Err(format!("This position ({pos_str}) hasn't valid line."));
+            return Err("This position hasn't valid line.");
         }
 
         for flip in flips {
             self.disks.insert(flip, self.active_side);
         }
+
         self.active_side = other_side;
+
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::reversi::position::Position;
+    use crate::reversi::Reversi;
+
+    #[test]
+    fn reverci() {
+        let mut instance = Reversi::new(8, 8);
+        println!("Possible places: {:?}", instance.possible_places());
+        if let Err(msg) = instance.place(Position(3, 4)) {
+            println!("{}", msg)
+        }
+        if let Err(msg) = instance.place(Position(5, 3)) {
+            println!("{}", msg)
+        }
+        if let Err(msg) = instance.place(Position(6, 2)) {
+            println!("{}", msg)
+        }
+        println!("Possible places: {:?}", instance.possible_places());
+        println!("Get scores: {}", instance.get_scores());
+        println!("{:#?}", instance);
     }
 }
